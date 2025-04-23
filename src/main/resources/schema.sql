@@ -37,9 +37,11 @@ create table server
 (
     id               integer      not null,
     ip               varchar(255) not null,
-    last_update_date timestamp,
+    created_date     timestamp    not null default current_timestamp,
+    last_update_date timestamp    not null default current_timestamp,
     name             varchar(255) not null,
     version          bigint,
+    is_active        boolean      not null default true,
     primary key (id)
 );
 create table sql_event
@@ -60,3 +62,27 @@ alter table request_event
     add constraint FK_req_ev_event foreign key (server_id) references server;
 alter table sql_event
     add constraint FK__sql_ev_server foreign key (server_id) references server;
+create table comment
+(
+    id              integer         not null,
+    content         varchar(255)    not null,
+    primary key (id)
+);
+create table follower
+(
+    id              integer         not null,
+    user_id         varchar(30)     not null,
+    comment_id      integer         not null,
+    subscription_date timestamp     not null,
+    primary key (id)
+);
+alter table follower
+    add constraint FK_foll_comment foreign key (comment_id) references comment;
+create table comment_event
+(
+    comment_id      integer         not null,
+    event_id        integer         not null,
+    primary key (comment_id, event_id)
+);
+alter table comment_event
+    add constraint FK_comment_event_comment foreign key (comment_id) references comment;

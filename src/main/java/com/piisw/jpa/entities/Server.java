@@ -1,22 +1,23 @@
 package com.piisw.jpa.entities;
 
+import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.Filter;
+import org.hibernate.annotations.SQLDelete;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.SequenceGenerator;
 import java.time.LocalDateTime;
 
 @Entity
 @Getter
 @Setter
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@NoArgsConstructor(access = AccessLevel.PUBLIC)
+@SQLDelete(sql = """
+UPDATE server SET is_active = false WHERE id = ? 
+""")
+@Filter(name = "activeServerFilter", condition = "is_active = :isActive")
 public class Server {
 
     @Id
@@ -30,25 +31,32 @@ public class Server {
     @Column(nullable = false)
     private String ip;
 
+    @Column(updatable = false)
+    private LocalDateTime createdDate;
+
+    @Column(nullable = false)
+    private LocalDateTime lastUpdateDate;
+
+    @Version
+    private Long version;
+
+    @Column(nullable = false)
+    private boolean isActive = Boolean.TRUE;
+
     public Server(String name, String ip) {
         super();
         this.name = name;
         this.ip = ip;
     }
 
-    public Long getVersion(){
-        //TODO: remove it
-        return null;
+    @PreUpdate
+    protected void onUpdate() {
+        this.lastUpdateDate = LocalDateTime.now();
     }
 
-    public LocalDateTime getCreatedDate(){
-        //TODO: remove it
-        return null;
+    @PrePersist
+    protected void onCreate() {
+        this.createdDate = LocalDateTime.now();
+        this.lastUpdateDate = this.createdDate;
     }
-
-    public LocalDateTime getLastUpdateDate(){
-        //TODO: remove it
-        return null;
-    }
-
 }
